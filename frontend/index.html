@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Driver Monitoring System</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div style="min-height:100vh; display:flex; align-items:center; justify-content:center;">
+    <p class="text-secondary">Loading…</p>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    // Simple entry router — no framework needed for a single redirect.
+    if (localStorage.getItem("dms_token")) {
+      location.replace("dashboard.html");
+    } else {
+      location.replace("login.html");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,341 @@
+/* ==========================================================================
+   Driver Monitoring System — design tokens & base styles
+
+   Design direction: an instrument-cluster / dashboard aesthetic grounded in
+   the subject itself (a driver-facing telemetry system), not a generic
+   dark-mode SaaS look. Graphite-asphalt background, hazard-amber and
+   traffic-green/brake-red status colors (the actual vocabulary of road
+   signage and car dashboards), condensed technical display type for
+   headers, monospace for live numeric readouts (gauge-cluster digits).
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+:root {
+  /* --- Color: graphite/asphalt surface family --- */
+  --bg-void: #10141a;
+  --bg-panel: #171c24;
+  --bg-panel-raised: #1e2530;
+  --bg-panel-hover: #242c39;
+  --line: #2a323f;
+  --line-bright: #3a4453;
+
+  /* --- Color: text --- */
+  --text-primary: #edf0f4;
+  --text-secondary: #8b95a7;
+  --text-muted: #5c6577;
+
+  /* --- Color: status vocabulary (road-signage derived) --- */
+  --accent-safe: #33d17a;
+  --accent-safe-dim: #1d7c48;
+  --accent-info: #4da3ff;
+  --accent-warn: #f5a623;
+  --accent-warn-dim: #96690f;
+  --accent-danger: #ff6b4a;
+  --accent-critical: #ef3b56;
+  --accent-critical-glow: rgba(239, 59, 86, 0.35);
+
+  /* --- Type scale --- */
+  --font-display: "Rajdhani", "Inter", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  /* --- Layout --- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --transition-fast: 150ms ease;
+  --transition-med: 300ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg-void);
+  background-image:
+    radial-gradient(circle at 15% -10%, rgba(77, 163, 255, 0.06), transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(245, 166, 35, 0.05), transparent 35%);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--accent-info);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+input, select {
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: var(--accent-info);
+  color: #06090d;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-info);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------- */
+/* Top nav bar — shared across authenticated pages                       */
+/* --------------------------------------------------------------------- */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.navbar__brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent-info), var(--accent-safe));
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  color: #06090d;
+}
+
+.navbar__links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navbar__link {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.navbar__link:hover {
+  background: var(--bg-panel-raised);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.navbar__link.active {
+  background: var(--bg-panel-raised);
+  color: var(--accent-info);
+}
+
+.navbar__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navbar__username {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------- */
+/* Buttons                                                               */
+/* --------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn--primary {
+  background: var(--accent-info);
+  color: #06090d;
+}
+.btn--primary:hover:not(:disabled) { background: #6fb6ff; }
+
+.btn--go {
+  background: var(--accent-safe);
+  color: #06090d;
+}
+.btn--go:hover:not(:disabled) { background: #4fe392; }
+
+.btn--stop {
+  background: var(--accent-danger);
+  color: #06090d;
+}
+.btn--stop:hover:not(:disabled) { background: #ff8666; }
+
+.btn--ghost {
+  background: transparent;
+  border-color: var(--line-bright);
+  color: var(--text-primary);
+}
+.btn--ghost:hover:not(:disabled) { background: var(--bg-panel-raised); }
+
+.btn--block { width: 100%; }
+.btn--lg { padding: 14px 24px; font-size: 15px; }
+
+/* --------------------------------------------------------------------- */
+/* Form elements                                                         */
+/* --------------------------------------------------------------------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.field input, .field select {
+  background: var(--bg-void);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color var(--transition-fast);
+}
+.field input:focus, .field select:focus {
+  border-color: var(--accent-info);
+  outline: none;
+}
+.field input::placeholder { color: var(--text-muted); }
+
+/* --------------------------------------------------------------------- */
+/* Panels / cards                                                        */
+/* --------------------------------------------------------------------- */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+
+.panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel__title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.panel__body {
+  padding: 20px;
+}
+
+/* --------------------------------------------------------------------- */
+/* Toast / banner notices                                                */
+/* --------------------------------------------------------------------- */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  border: 1px solid;
+}
+.notice--info {
+  background: rgba(77, 163, 255, 0.08);
+  border-color: rgba(77, 163, 255, 0.3);
+  color: #a9d1ff;
+}
+.notice--error {
+  background: rgba(239, 59, 86, 0.08);
+  border-color: rgba(239, 59, 86, 0.35);
+  color: #ffb3bf;
+}
+.notice--warn {
+  background: rgba(245, 166, 35, 0.08);
+  border-color: rgba(245, 166, 35, 0.35);
+  color: #ffd699;
+}
+
+.hidden { display: none !important; }
+
+.privacy-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: fit-content;
+}
+.privacy-strip__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-safe);
+  box-shadow: 0 0 8px var(--accent-safe);
+}
+
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }

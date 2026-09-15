@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Session Details — Driver Monitoring System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__brand-mark">DM</div>
+      Driver Monitor
+    </div>
+    <div class="navbar__links">
+      <a class="navbar__link" href="dashboard.html">Dashboard</a>
+      <a class="navbar__link active" href="history.html">History &amp; Analytics</a>
+    </div>
+    <div class="navbar__user">
+      <span class="navbar__username" data-navbar-username></span>
+      <button class="btn btn--ghost" data-logout>Log out</button>
+    </div>
+  </nav>
+
+  <main class="page-shell">
+    <div class="page-header">
+      <div>
+        <h1 id="session-title">Session Details</h1>
+        <span class="text-secondary" id="session-subtitle"></span>
+      </div>
+      <a href="history.html" class="btn btn--ghost">&larr; Back to history</a>
+    </div>
+
+    <div class="notice notice--error hidden" id="error-banner" style="margin-bottom:16px;"></div>
+
+    <section style="margin-bottom:24px;">
+      <div class="summary-grid" id="session-summary-grid"></div>
+    </section>
+
+    <div class="dashboard-grid">
+      <section class="panel">
+        <div class="panel__header"><span class="panel__title">Detection Events</span></div>
+        <div class="panel__body" style="padding:0;">
+          <table class="session-table">
+            <thead><tr><th>Time</th><th>Type</th><th>Severity</th><th>Duration</th></tr></thead>
+            <tbody id="events-table-body"></tbody>
+          </table>
+          <div class="empty-state hidden" id="events-empty">No detection events recorded.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel__header"><span class="panel__title">Alerts</span></div>
+        <div class="panel__body">
+          <div class="alert-feed" id="alerts-feed"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      Auth.requireAuth();
+      const errorBanner = document.getElementById("error-banner");
+      const params = new URLSearchParams(location.search);
+      const sessionId = params.get("id");
+
+      if (!sessionId) {
+        errorBanner.textContent = "No session specified.";
+        errorBanner.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const session = await Api.get(`/sessions/${sessionId}`);
+        renderSession(session);
+      } catch (err) {
+        errorBanner.textContent = err.message;
+        errorBanner.classList.remove("hidden");
+      }
+    });
+
+    function renderSession(s) {
+      document.getElementById("session-title").textContent = `Session #${s.id}`;
+      document.getElementById("session-subtitle").textContent = `${formatDateTime(s.started_at)} · ${formatDuration(s.duration_seconds)}`;
+
+      document.getElementById("session-summary-grid").innerHTML = `
+        <div class="summary-stat"><div class="summary-stat__label">Duration</div><div class="summary-stat__value">${formatDuration(s.duration_seconds)}</div></div>
+        <div class="summary-stat"><div class="summary-stat__label">Blinks</div><div class="summary-stat__value">${s.blink_count}</div></div>
+        <div class="summary-stat"><div class="summary-stat__label">Yawns</div><div class="summary-stat__value">${s.yawn_count}</div></div>
+        <div class="summary-stat"><div class="summary-stat__label">Drowsiness Events</div><div class="summary-stat__value">${s.drowsiness_events}</div></div>
+        <div class="summary-stat"><div class="summary-stat__label">Distraction Events</div><div class="summary-stat__value">${s.distraction_events}</div></div>
+        <div class="summary-stat"><div class="summary-stat__label">Phone Detections</div><div class="summary-stat__value">${s.phone_detection_count}</div></div>
+        <div class="summary-stat"><div class="summary-stat__label">Longest Eye Closure</div><div class="summary-stat__value">${s.longest_eye_closure.toFixed(1)}s</div></div>
+        <div class="summary-stat"><div class="summary-stat__label">Longest Distraction</div><div class="summary-stat__value">${s.longest_distraction.toFixed(1)}s</div></div>
+        <div class="summary-stat"><div class="summary-stat__label">Average Risk</div><div class="summary-stat__value">${s.average_risk_score.toFixed(1)}</div></div>
+        <div class="summary-stat"><div class="summary-stat__label">Maximum Risk</div><div class="summary-stat__value"><span class="risk-badge risk-badge--${s.maximum_risk_level.toLowerCase()}">${s.maximum_risk_level}</span></div></div>
+      `;
+
+      const eventsBody = document.getElementById("events-table-body");
+      if (s.events.length === 0) {
+        document.getElementById("events-empty").classList.remove("hidden");
+      } else {
+        eventsBody.innerHTML = s.events
+          .map((e) => `<tr><td>${formatClockTime(e.timestamp)}</td><td>${e.event_type.replace(/_/g, " ")}</td><td>${e.severity}</td><td>${e.duration_seconds.toFixed(1)}s</td></tr>`)
+          .join("");
+      }
+
+      const alertsFeed = document.getElementById("alerts-feed");
+      if (s.alerts.length === 0) {
+        alertsFeed.innerHTML = `<p class="text-muted" style="font-size:13px;">No alerts fired during this session.</p>`;
+      } else {
+        alertsFeed.innerHTML = s.alerts
+          .map(
+            (a) => `
+          <div class="alert-row alert-row--${a.level.toLowerCase()}">
+            <span class="alert-row__time">${formatClockTime(a.timestamp)}</span>
+            <span class="alert-row__msg">${escapeHtml(a.message)}</span>
+          </div>`
+          )
+          .join("");
+      }
+    }
+  </script>
+</body>
+</html>

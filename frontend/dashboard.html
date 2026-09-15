@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Driver Monitoring System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__brand-mark">DM</div>
+      Driver Monitor
+    </div>
+    <div class="navbar__links">
+      <a class="navbar__link active" href="dashboard.html">Dashboard</a>
+      <a class="navbar__link" href="history.html">History &amp; Analytics</a>
+    </div>
+    <div class="navbar__user">
+      <span class="navbar__username" data-navbar-username></span>
+      <button class="btn btn--ghost" data-logout>Log out</button>
+    </div>
+  </nav>
+
+  <main class="page-shell">
+    <div class="page-header">
+      <div>
+        <h1>AI Driver Monitoring</h1>
+        <span class="text-secondary">Real-time drowsiness &amp; distraction analysis</span>
+      </div>
+      <div class="privacy-strip">
+        <span class="privacy-strip__dot"></span>
+        Camera data is processed for real-time monitoring. Raw video is not stored by default.
+      </div>
+    </div>
+
+    <div class="toolbar-row">
+      <button class="btn btn--ghost" id="calibrate-btn">Calibrate Driver</button>
+      <span class="text-secondary" id="calibration-status">No personal calibration loaded</span>
+    </div>
+
+    <div class="notice notice--error hidden" id="error-banner" style="margin-bottom: 16px;"></div>
+
+    <div class="dashboard-grid">
+      <div class="dashboard-main">
+        <div class="camera-panel status--safe" id="camera-panel">
+          <div class="camera-panel__top">
+            <span class="camera-panel__live"><span class="camera-panel__live-dot"></span> LIVE CAMERA</span>
+            <span class="camera-panel__timer" id="session-timer">00:00</span>
+          </div>
+
+          <div class="camera-panel__video-wrap">
+            <video id="webcam-video" autoplay playsinline muted></video>
+            <canvas id="overlay-canvas"></canvas>
+            <div class="camera-panel__placeholder" id="camera-placeholder">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M15 10l4.55-2.28A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.9L15 14M5 6h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+              </svg>
+              <span>Preparing camera…</span>
+            </div>
+          </div>
+
+          <div class="camera-panel__bottom">
+            <span class="status-pill" id="status-pill">
+              <span class="status-pill__dot"></span>
+              <span id="status-label">SAFE</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="session-controls">
+          <button class="btn btn--go btn--lg" id="start-session-btn" style="flex:1">Start Session</button>
+          <button class="btn btn--stop btn--lg hidden" id="stop-session-btn" style="flex:1">Stop Session</button>
+        </div>
+
+        <section class="panel">
+          <div class="panel__header"><span class="panel__title">Live Computer Vision Metrics</span></div>
+          <div class="panel__body">
+            <div class="metrics-grid">
+              <div class="metric-tile"><div class="metric-tile__label">EAR</div><div class="metric-tile__value" id="metric-ear">—</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">MAR</div><div class="metric-tile__value" id="metric-mar">—</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">Head Yaw</div><div class="metric-tile__value" id="metric-yaw">0.0°</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">Head Pitch</div><div class="metric-tile__value" id="metric-pitch">0.0°</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">Head Roll</div><div class="metric-tile__value" id="metric-roll">0.0°</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">Blink Count</div><div class="metric-tile__value" id="metric-blinks">0</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">Yawn Count</div><div class="metric-tile__value" id="metric-yawns">0</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">Eyes Closed</div><div class="metric-tile__value value--ok" id="metric-eye-closed">NO</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">Phone</div><div class="metric-tile__value value--ok" id="metric-phone">NOT DETECTED</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">Face</div><div class="metric-tile__value value--ok" id="metric-face">DETECTED</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">Processing FPS</div><div class="metric-tile__value" id="metric-fps">0.0</div></div>
+              <div class="metric-tile"><div class="metric-tile__label">Detection Latency</div><div class="metric-tile__value" id="metric-latency">0 ms</div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel__header"><span class="panel__title">Live Signal History</span></div>
+          <div class="panel__body charts-grid charts-grid--live">
+            <div class="chart-wrap"><div class="chart-label">EAR / MAR</div><canvas id="signals-chart"></canvas></div>
+            <div class="chart-wrap"><div class="chart-label">Risk Score</div><canvas id="risk-chart"></canvas></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="dashboard-side">
+        <section class="panel gauge-panel">
+          <div class="panel__header"><span class="panel__title">Risk Assessment</span></div>
+          <div class="panel__body gauge-panel__body">
+            <div class="gauge-svg-wrap">
+              <svg viewBox="0 0 300 165" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 20.00 150.00 A 130 130 0 0 1 34.17 90.98 L 64.46 106.42 A 96 96 0 0 0 54.00 150.00 Z" fill="var(--accent-safe)" opacity="0.85"/>
+                <path d="M 34.17 90.98 A 130 130 0 0 1 90.98 34.17 L 106.42 64.46 A 96 96 0 0 0 64.46 106.42 Z" fill="#5be08f" opacity="0.85"/>
+                <path d="M 90.98 34.17 A 130 130 0 0 1 190.17 26.36 L 179.67 58.70 A 96 96 0 0 0 106.42 64.46 Z" fill="var(--accent-warn)" opacity="0.85"/>
+                <path d="M 190.17 26.36 A 130 130 0 0 1 255.17 73.59 L 227.67 93.57 A 96 96 0 0 0 179.67 58.70 Z" fill="var(--accent-danger)" opacity="0.85"/>
+                <path d="M 255.17 73.59 A 130 130 0 0 1 280.00 150.00 L 246.00 150.00 A 96 96 0 0 0 227.67 93.57 Z" fill="var(--accent-critical)" opacity="0.85"/>
+
+                <line x1="16.0" y1="150.0" x2="6.0" y2="150.0" stroke="var(--line-bright)" stroke-width="2"/>
+                <line x1="41.6" y1="71.2" x2="33.5" y2="65.4" stroke="var(--line-bright)" stroke-width="2"/>
+                <line x1="108.6" y1="22.6" x2="105.5" y2="13.0" stroke="var(--line-bright)" stroke-width="2"/>
+                <line x1="191.4" y1="22.6" x2="194.5" y2="13.0" stroke="var(--line-bright)" stroke-width="2"/>
+                <line x1="258.4" y1="71.2" x2="266.5" y2="65.4" stroke="var(--line-bright)" stroke-width="2"/>
+                <line x1="284.0" y1="150.0" x2="294.0" y2="150.0" stroke="var(--line-bright)" stroke-width="2"/>
+
+                <g id="gauge-needle" transform="rotate(-90 150 150)">
+                  <polygon points="150,58 145,150 155,150" fill="var(--text-primary)"/>
+                  <circle cx="150" cy="150" r="9" fill="var(--text-primary)"/>
+                  <circle cx="150" cy="150" r="4" fill="var(--bg-panel)"/>
+                </g>
+              </svg>
+            </div>
+
+            <div class="gauge-readout">
+              <div class="gauge-score"><span id="gauge-score">0</span><span class="gauge-score__suffix">/100</span></div>
+              <div class="gauge-level" id="gauge-level" style="color: var(--accent-safe)">SAFE</div>
+            </div>
+
+            <div class="gauge-sub-scores">
+              <div class="gauge-sub-score">
+                <div class="gauge-sub-score__label">Drowsiness</div>
+                <div class="gauge-sub-score__value"><span id="drowsiness-score">0</span>%</div>
+              </div>
+              <div class="gauge-sub-score">
+                <div class="gauge-sub-score__label">Distraction</div>
+                <div class="gauge-sub-score__value"><span id="distraction-score">0</span>%</div>
+              </div>
+            </div>
+
+            <div class="gauge-reasons">
+              <div class="gauge-reasons__title">Why this score</div>
+              <ul id="gauge-reasons-list">
+                <li>Start a session to begin monitoring</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel__header"><span class="panel__title">Recent Alerts</span></div>
+          <div class="panel__body">
+            <div class="alert-feed" id="alert-feed"></div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel__header"><span class="panel__title">Live Event Timeline</span></div>
+          <div class="panel__body"><div class="event-timeline" id="event-timeline"></div></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal-backdrop hidden" id="calibration-modal">
+    <div class="panel modal-card calibration-card">
+      <div class="panel__header"><span class="panel__title">Driver Calibration</span><button class="btn btn--ghost" id="calibration-cancel-btn">Cancel</button></div>
+      <div class="panel__body">
+        <p id="calibration-instruction">Calibration takes about 12 seconds. Sit comfortably and keep your face in view.</p>
+        <div class="calibration-progress"><div id="calibration-progress-bar"></div></div>
+        <div class="calibration-progress__label" id="calibration-progress-label">Ready</div>
+        <button class="btn btn--go btn--lg" id="calibration-start-btn">Begin Calibration</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="summary-modal">
+    <div class="panel modal-card">
+      <div class="panel__header">
+        <span class="panel__title">Session Complete</span>
+        <button class="btn btn--ghost" id="summary-close-btn" style="padding:6px 12px;">Close</button>
+      </div>
+      <div class="panel__body" id="summary-body"></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/webcam.js"></script>
+  <script src="js/face.js"></script>
+  <script src="js/alerts.js"></script>
+  <script src="js/session.js"></script>
+  <script src="js/monitoring.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Driver Monitoring System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+  <div class="auth-shell">
+    <section class="auth-showcase">
+      <div class="auth-brand">
+        <div class="auth-brand-mark">DM</div>
+        <div class="auth-brand-name">Driver Monitor</div>
+      </div>
+
+      <div class="auth-headline">
+        <h1>Know the moment attention slips.</h1>
+        <p>
+          Real-time eye, yawn, and head-pose analysis running live in your
+          browser — with phone-detection and session analytics on the
+          backend. Built as an MTech AI/Computer Vision research prototype.
+        </p>
+      </div>
+
+      <div class="auth-gauge-preview">
+        <div class="auth-stat">
+          <div class="auth-stat__value" style="color:var(--accent-safe)">EAR</div>
+          <div class="auth-stat__label">Eye aspect ratio</div>
+        </div>
+        <div class="auth-stat">
+          <div class="auth-stat__value" style="color:var(--accent-warn)">MAR</div>
+          <div class="auth-stat__label">Mouth aspect ratio</div>
+        </div>
+        <div class="auth-stat">
+          <div class="auth-stat__value" style="color:var(--accent-info)">YOLO</div>
+          <div class="auth-stat__label">Phone detection</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-form-wrap">
+      <div class="auth-form-card">
+        <h2>Sign in</h2>
+        <p class="text-secondary">Monitor a driving session or review your history.</p>
+
+        <div class="notice notice--error hidden"></div>
+
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email" placeholder="you@example.com" required autocomplete="email" />
+          </div>
+          <div class="field">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" placeholder="••••••••" required autocomplete="current-password" minlength="6" />
+          </div>
+          <button type="submit" class="btn btn--primary btn--block btn--lg">Sign in</button>
+        </form>
+
+        <div class="auth-switch">
+          Don't have an account? <a href="register.html">Create one</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

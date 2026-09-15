@@ -1,0 +1,32 @@
+/* Responsive breakpoints — desktop / laptop / tablet / mobile */
+
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .charts-grid--live { grid-template-columns: 1fr; }
+  .stat-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .page-shell { padding: 16px 14px 40px; }
+  .navbar { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
+  .navbar__links { order: 3; width: 100%; overflow-x: auto; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .summary-grid { grid-template-columns: 1fr; }
+  .stat-strip { grid-template-columns: 1fr 1fr; }
+  .session-controls { flex-direction: column; }
+  .session-table { font-size: 12px; }
+  .session-table th, .session-table td { padding: 10px 8px; }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .gauge-score { font-size: 34px; }
+  .auth-form-wrap { padding: 28px 18px; }
+}

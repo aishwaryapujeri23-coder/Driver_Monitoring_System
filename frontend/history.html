@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History &amp; Analytics — Driver Monitoring System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__brand-mark">DM</div>
+      Driver Monitor
+    </div>
+    <div class="navbar__links">
+      <a class="navbar__link" href="dashboard.html">Dashboard</a>
+      <a class="navbar__link active" href="history.html">History &amp; Analytics</a>
+    </div>
+    <div class="navbar__user">
+      <span class="navbar__username" data-navbar-username></span>
+      <button class="btn btn--ghost" data-logout>Log out</button>
+    </div>
+  </nav>
+
+  <main class="page-shell">
+    <div class="page-header">
+      <div>
+        <h1>History &amp; Analytics</h1>
+        <span class="text-secondary">Aggregate trends and past sessions</span>
+      </div>
+    </div>
+
+    <div class="notice notice--error hidden" id="error-banner" style="margin-bottom:16px;"></div>
+
+    <section style="margin-bottom: 24px;">
+      <div class="stat-strip">
+        <div class="stat-card"><div class="stat-card__label">Total Sessions</div><div class="stat-card__value" id="stat-total-sessions">0</div></div>
+        <div class="stat-card"><div class="stat-card__label">Total Driving Time</div><div class="stat-card__value" id="stat-total-time">00:00</div></div>
+        <div class="stat-card"><div class="stat-card__label">Average Risk Score</div><div class="stat-card__value" id="stat-avg-risk">0.0</div></div>
+        <div class="stat-card"><div class="stat-card__label">Highest Risk</div><div class="stat-card__value" id="stat-highest-risk">—</div></div>
+        <div class="stat-card"><div class="stat-card__label">Drowsiness Events</div><div class="stat-card__value" id="stat-drowsiness-events">0</div></div>
+        <div class="stat-card"><div class="stat-card__label">Distraction Events</div><div class="stat-card__value" id="stat-distraction-events">0</div></div>
+        <div class="stat-card"><div class="stat-card__label">Total Yawns</div><div class="stat-card__value" id="stat-yawns">0</div></div>
+        <div class="stat-card"><div class="stat-card__label">Total Blinks</div><div class="stat-card__value" id="stat-blinks">0</div></div>
+        <div class="stat-card"><div class="stat-card__label">Phone Detections</div><div class="stat-card__value" id="stat-phone">0</div></div>
+      </div>
+    </section>
+
+    <section style="margin-bottom: 24px;">
+      <div class="charts-grid">
+        <div class="panel chart-panel">
+          <div class="panel__header"><span class="panel__title">Risk Score Over Time</span></div>
+          <div class="panel__body"><canvas id="chart-risk-timeline"></canvas></div>
+        </div>
+        <div class="panel chart-panel">
+          <div class="panel__header"><span class="panel__title">Events per Session</span></div>
+          <div class="panel__body"><canvas id="chart-events"></canvas></div>
+        </div>
+        <div class="panel chart-panel">
+          <div class="panel__header"><span class="panel__title">Session Duration</span></div>
+          <div class="panel__body"><canvas id="chart-duration"></canvas></div>
+        </div>
+        <div class="panel chart-panel">
+          <div class="panel__header"><span class="panel__title">Risk Level Distribution</span></div>
+          <div class="panel__body"><canvas id="chart-distribution"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header"><span class="panel__title">Session History</span></div>
+      <div class="panel__body" style="padding:0;">
+        <table class="session-table" id="session-table">
+          <thead>
+            <tr>
+              <th>Started</th>
+              <th>Duration</th>
+              <th>Blinks</th>
+              <th>Yawns</th>
+              <th>Drowsiness</th>
+              <th>Distraction</th>
+              <th>Avg Risk</th>
+              <th>Max Risk</th>
+            </tr>
+          </thead>
+          <tbody id="session-table-body"></tbody>
+        </table>
+        <div class="empty-state hidden" id="session-empty-state">
+          No sessions yet. <a href="dashboard.html">Start your first session</a>.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/charts.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      Auth.requireAuth();
+      const errorBanner = document.getElementById("error-banner");
+
+      try {
+        const [summary, timeline, sessions] = await Promise.all([
+          Api.get("/analytics/summary"),
+          Api.get("/analytics/timeline"),
+          Api.get("/sessions"),
+        ]);
+
+        renderSummaryStats(summary);
+        if (timeline.length > 0) {
+          renderCharts(timeline);
+        }
+        renderSessionTable(sessions);
+      } catch (err) {
+        errorBanner.textContent = err.message;
+        errorBanner.classList.remove("hidden");
+      }
+    });
+
+    function renderSessionTable(sessions) {
+      const tbody = document.getElementById("session-table-body");
+      const emptyState = document.getElementById("session-empty-state");
+      const table = document.getElementById("session-table");
+      const completed = sessions.filter((s) => s.status === "completed");
+
+      if (completed.length === 0) {
+        table.classList.add("hidden");
+        emptyState.classList.remove("hidden");
+        return;
+      }
+
+      tbody.innerHTML = completed
+        .map(
+          (s) => `
+        <tr onclick="location.href='session-details.html?id=${s.id}'" style="cursor:pointer;">
+          <td>${formatDateTime(s.started_at)}</td>
+          <td>${formatDuration(s.duration_seconds)}</td>
+          <td>${s.blink_count}</td>
+          <td>${s.yawn_count}</td>
+          <td>${s.drowsiness_events}</td>
+          <td>${s.distraction_events}</td>
+          <td>${s.average_risk_score.toFixed(1)}</td>
+          <td><span class="risk-badge risk-badge--${s.maximum_risk_level.toLowerCase()}">${s.maximum_risk_level}</span></td>
+        </tr>`
+        )
+        .join("");
+    }
+  </script>
+</body>
+</html>
